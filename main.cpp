@@ -21,7 +21,7 @@ public:
 	{
 		Wt::Dbo::field(a, title, "title");
 		Wt::Dbo::belongsTo(a, publisher, "publisher");
-		Wt::Dbo::hasMany(a, stocks, Wt::Dbo::ManyToMany, "book");
+		Wt::Dbo::hasMany(a, stocks, Wt::Dbo::ManyToOne, "book");
 	}
 
 };
@@ -50,7 +50,7 @@ public:
 		void persist(Action& a)
 		{
 			Wt::Dbo::field(a, name, "name");
-			Wt::Dbo::hasMany(a, stocks,Wt::Dbo::ManyToMany,"stock");
+			Wt::Dbo::hasMany(a, stocks,Wt::Dbo::ManyToOne,"shop");
 	}
 };
 class Sale;
@@ -69,7 +69,7 @@ public:
 		Wt::Dbo::field(a, count, "count");
 		Wt::Dbo::belongsTo(a, book, "book");
 		Wt::Dbo::belongsTo(a, shop, "shop");
-		Wt::Dbo::hasMany(a, sales, Wt::Dbo::ManyToOne, "sale");
+		Wt::Dbo::hasMany(a, sales, Wt::Dbo::ManyToOne, "stock");
 	}
 };
 
@@ -147,7 +147,7 @@ int main()
 		auto sa2 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 555.6,"2021-03-28", 4 }}));
 		auto sa3 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 222.5, "2022-05-29", 5 }}));
 
-		//найти по введеным данным
+		//Г­Г Г©ГІГЁ ГЇГ® ГўГўГҐГ¤ГҐГ­Г»Г¬ Г¤Г Г­Г­Г»Г¬
 		string p;
 		cout << "Add publisher" << endl;
 		cin >> p;
