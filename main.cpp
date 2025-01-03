@@ -91,16 +91,40 @@ public:
 		Wt::Dbo::belongsTo(a, stock,"stock");
 	}
 };
-
+void findShop(Wt::Dbo::Session& s, std::string namePublisher) {
+	Wt::Dbo::ptr<Publisher> findPublisher = s.find<Publisher>().where("name = ?").bind(namePublisher);
+	Wt::Dbo::collection<Wt::Dbo::ptr<Book>> books = s.find<Book>().where("publisher_id = ?").bind(findPublisher);
+	std::vector<Wt::Dbo::collection<Wt::Dbo::ptr<Stock>>> stocks;
+	for (const auto& id : books) {
+		stocks.push_back(s.find<Stock>().where("book_id = ?").bind(id.id()));
+	}
+	std::vector<Wt::Dbo::collection<Wt::Dbo::ptr<Shop>>> shops;
+	for (const auto& col : stocks) {
+		for (const auto& id : col) {
+			shops.push_back(s.find<Shop>().where("id = ?").bind(id->shop));
+		}
+	}
+	cout << "Shops with books of " << namePublisher << ": \n";
+	set<std::string> names;
+	for (const auto& col : shops) {
+		for (const auto& id : col) {
+			names.insert(id->name);
+		}
+	}
+	for (const auto& name : names) {
+		std::cout << name << std::endl;
+	}
+}
 
 int main()
 {
-	setlocale(LC_ALL, "rus");
+	//setlocale(LC_ALL, "rus");
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
 
 	cout << "Hello" << endl;
-	try {
+	try 
+	{
 		std::string connectionString =
 			"host=localhost "
 			"port=5432 "
@@ -121,12 +145,19 @@ int main()
 		s.mapClass<Stock>("stock");
 		s.mapClass<Sale>("sale");
 
-		s.dropTables();
+		//s.dropTables();
+#if 0
 		s.createTables();
+#else 
+		//Чтение таблиц, если уже были
+		s.rereadAll();
+		cout << "Read tables ok!\n";
+#endif
 		
+		
+		Wt::Dbo::Transaction t{s};
 
-		/*Wt::Dbo::Transaction t{s};
-
+		
 		auto b1 = unique_ptr<Book>(move(unique_ptr<Book>{new Book{"Game of trone"}}));
 		auto b2 = unique_ptr<Book>(move(unique_ptr<Book>{new Book{"Black White"}}));
 		auto b3 = unique_ptr<Book>(move(unique_ptr<Book>{new Book{"War and peace"}}));
@@ -145,40 +176,13 @@ int main()
 
 		auto sa1 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 326.1,"2020-10-12", 6 }}));
 		auto sa2 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 555.6,"2021-03-28", 4 }}));
-		auto sa3 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 222.5, "2022-05-29", 5 }}));
+		auto sa3 = unique_ptr<Sale>(move(unique_ptr<Sale>{new Sale{ 222.5,"2022-05-29", 5 }}));
 
-		//íàéòè ïî ââåäåíûì äàííûì
-		string p;
-		cout << "Add publisher" << endl;
-		cin >> p;
-
-		/*Wt::Dbo::collection < Wt::Dbo::ptr<Publisher> publisher
-			= s.find<Publisher>().where("name = ?").bind(p);
-			
-		Wt::Dbo::ptr<Publisher> findPublisher = s.find<Publisher>().where("name = ?").bind(p);
-		Wt::Dbo::collection<Wt::Dbo::ptr<Book>> books = s.find<Book>().where("publisher_id = ?").bind(findPublisher);
-		std::vector<Wt::Dbo::collection<Wt::Dbo::ptr<Stock>>> stocks;
-		for (const auto& id : books) {
-			stocks.push_back(s.find<Stock>().where("book_id = ?").bind(id.id()));
-		}
-		vector<Wt::Dbo::collection<Wt::Dbo::ptr<Shop>>> shops;
-		for (const auto& col : stocks) {
-			for (const auto& id : col) {
-				shops.push_back(s.find<Shop>().where("id = ?").bind(id->shops));
-			}
-		}
-		cout << "Shops with books of " << p << ": \n";
-		set<std::string> names;
-		for (const auto& col : shops) {
-			for (const auto& id : col) {
-				names.insert(id->name);
-			}
-		}
-		for (const auto& name : names) {
-			cout << name << endl;
-		}
-		*/
-		//t.commit();
+		string namePublisher;
+		cout << "Input name of publisher: ";
+		cin >> namePublisher;
+		findShop(s, namePublisher);
+		t.commit();
 
 
 		
